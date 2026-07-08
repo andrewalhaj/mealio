@@ -1,6 +1,6 @@
 import type { FetchResult } from './types'
 
-const APIFY_ACTOR_ID = 'shu8hvrXbJbY3Eb9W' // apify/instagram-scraper
+const APIFY_ACTOR_ID = 'shu8hvrXbJbY3Eb9W' // public actor slug: apify/instagram-scraper — gitleaks:allow
 
 export async function fetchInstagram(url: string): Promise<FetchResult> {
   const apiKey = process.env.APIFY_API_KEY
