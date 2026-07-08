@@ -1,0 +1,25 @@
+# Gitleaks configuration for mealio
+
+title = "mealio gitleaks config"
+
+# Use the default allowlist concept
+[allowlist]
+description = "Global allowlist for mealio"
+paths = [
+  # Node modules are not our code
+  '''(^|/)node_modules/''',
+  # Test fixtures may contain intentional secrets
+  '''(^|/)test/.*fixture''',
+  # Generated Prisma client files
+  '''(^|/)prisma/.*\.(ts|js)$''',
+  # Lockfiles are fine
+  '''package-lock\.json''',
+  '''yarn\.lock''',
+  '''pnpm-lock\.yaml''',
+  # Build output
+  '''(^|/)\.next/''',
+]
+
+# Custom rules for mealio-specific patterns
+# Note: SQLite .db files are caught by the CI workflow step, not by gitleaks rules,
+# because gitleaks operates on file content patterns, not paths.
