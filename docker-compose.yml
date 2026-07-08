@@ -1,0 +1,18 @@
+services:
+  mealio:
+    image: mealio:latest
+    build: .
+    container_name: mealio
+    restart: unless-stopped
+    ports:
+      - "3015:3015"
+    volumes:
+      - ./data:/app/data
+      - ~/.claude/.credentials.json:/run/claude_credentials.json:ro
+    env_file:
+      - .env.docker
+    environment:
+      NODE_ENV: production
+      PORT: "3015"
+      HOSTNAME: "0.0.0.0"
+      DATABASE_URL: "file:///app/data/mealio.db"

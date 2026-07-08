@@ -1,0 +1,139 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Fonts ─────────────────────────────────────────────── */
+/* loaded via next/font in layout.tsx */
+
+/* ── Glass CSS custom properties ───────────────────────── */
+:root {
+  /* Blur */
+  --glass-blur:       28px;
+  --glass-blur-lg:    40px;
+  --glass-blur-sm:    16px;
+  /* Glass fills — DARK defaults */
+  --glass-fill:       rgba(255, 255, 255, 0.10);
+  --glass-fill-md:    rgba(255, 255, 255, 0.16);
+  --glass-border:     rgba(255, 255, 255, 0.18);
+  --glass-border-strong: rgba(255, 255, 255, 0.32);
+  --glass-specular:   rgba(255, 255, 255, 0.55);
+  --glass-radius:     24px;
+  --glass-radius-sm:  16px;
+  /* Page */
+  --bg-base:          #1c1f14;
+  --text-base:        rgba(255, 255, 255, 0.92);
+  --text-secondary:   rgba(255, 255, 255, 0.60);
+  --text-muted:       rgba(255, 255, 255, 0.40);
+  --text-shadow-glass: 0 1px 4px rgba(0,0,0,0.6);
+  /* Brand */
+  --brand-olive:      #1c1f14;
+  --brand-tomato:     #c0392b;
+  --brand-saffron:    #e67e22;
+  --brand-basil:      #27ae60;
+}
+
+html.light {
+  --glass-fill:        rgba(255, 255, 255, 0.62);
+  --glass-fill-md:     rgba(255, 255, 255, 0.78);
+  --glass-border:      rgba(0, 0, 0, 0.10);
+  --glass-border-strong: rgba(0, 0, 0, 0.20);
+  --glass-specular:    rgba(255, 255, 255, 0.90);
+  --bg-base:           #f2ede3;
+  --text-base:         rgba(20, 18, 10, 0.90);
+  --text-secondary:    rgba(20, 18, 10, 0.60);
+  --text-muted:        rgba(20, 18, 10, 0.38);
+  --text-shadow-glass: 0 1px 3px rgba(255,255,255,0.5);
+}
+
+/* ── Base ───────────────────────────────────────────────── */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--bg-base);
+  color: var(--text-base);
+  font-family: var(--font-inter), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Utility layer ──────────────────────────────────────── */
+@layer utilities {
+  .glass {
+    backdrop-filter: blur(var(--glass-blur)) saturate(160%);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(160%);
+    background: var(--glass-fill);
+    border: 1px solid var(--glass-border);
+  }
+
+  .glass-lg {
+    backdrop-filter: blur(var(--glass-blur-lg)) saturate(180%);
+    -webkit-backdrop-filter: blur(var(--glass-blur-lg)) saturate(180%);
+    background: var(--glass-fill-md);
+    border: 1px solid var(--glass-border);
+  }
+
+  .glass-surface {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+  }
+
+  .text-glass-readable {
+    text-shadow: var(--text-shadow-glass);
+  }
+}
+
+/* ── Light mode overrides ────────────────────────────────── */
+
+/* In light mode, remap white text tokens to dark */
+html.light .text-white    { color: var(--text-base) !important; }
+html.light .text-white\/90 { color: rgba(20,18,10,0.90) !important; }
+html.light .text-white\/80 { color: rgba(20,18,10,0.80) !important; }
+html.light .text-white\/70 { color: rgba(20,18,10,0.70) !important; }
+html.light .text-white\/60 { color: rgba(20,18,10,0.60) !important; }
+html.light .text-white\/50 { color: rgba(20,18,10,0.50) !important; }
+html.light .text-white\/40 { color: rgba(20,18,10,0.40) !important; }
+html.light .placeholder-white\/40::placeholder { color: rgba(20,18,10,0.40) !important; }
+
+/* Light mode input/select/textarea */
+html.light input, html.light select, html.light textarea {
+  color: var(--text-base);
+}
+html.light option {
+  background: var(--bg-base);
+  color: var(--text-base);
+}
+
+/* Light mode ambient blobs */
+html.light .blob-tomato  { background: rgba(192,57,43,0.20); }
+html.light .blob-saffron { background: rgba(230,126,34,0.18); }
+html.light .blob-basil   { background: rgba(39,174,96,0.14); }
+
+/* ── Reduced motion ─────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ── Focus styles ───────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.6);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ── Scrollbar (subtle) ─────────────────────────────────── */
+::-webkit-scrollbar       { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.18); border-radius: 3px; }
+
+html.light ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.18); }
+
+/* ── Print styles ───────────────────────────────────────── */
+@media print {
+  nav, .no-print, button, [role="dialog"] { display: none !important; }
+  body { background: white !important; color: black !important; }
+}

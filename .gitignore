@@ -1,0 +1,11 @@
+node_modules/
+.next/
+data/*.db
+data/*.db.bak-*
+prisma/*.db
+.env
+.env.*
+*.tar
+.DS_Store
+__pycache__/
+*.pyc

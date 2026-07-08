@@ -1,0 +1,39 @@
+{
+  "name": "mealio",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3015",
+    "build": "next build",
+    "start": "next start -p 3015",
+    "postinstall": "prisma generate"
+  },
+  "dependencies": {
+    "@mendable/firecrawl-js": "^4.25.3",
+    "@prisma/client": "5.x",
+    "@types/node": "20.x",
+    "@types/react": "18.x",
+    "@types/react-dom": "18.x",
+    "autoprefixer": "10.x",
+    "clsx": "2.x",
+    "color-thief-node": "1.x",
+    "framer-motion": "11.x",
+    "jsqr": "^1.4.0",
+    "lucide-react": "0.x",
+    "next": "14.2.29",
+    "openai": "^6.42.0",
+    "postcss": "8.x",
+    "prisma": "5.x",
+    "react": "18.x",
+    "react-dom": "18.x",
+    "sharp": "0.33.x",
+    "tailwind-merge": "2.x",
+    "tailwindcss": "3.x",
+    "typescript": "5.x",
+    "youtubei.js": "^17.0.1",
+    "zod": "3.x"
+  },
+  "devDependencies": {
+    "tsx": "^4.22.4"
+  }
+}

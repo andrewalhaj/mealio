@@ -1,0 +1,144 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Recipe {
+  id           String   @id @default(cuid())
+  title        String
+  description  String?
+  heroImage    String?
+  gallery      String   @default("[]")
+  prepTime     Int?
+  cookTime     Int?
+  totalTime    Int?
+  servings     Int?
+  difficulty   String?
+  cuisine      String?
+  sourceUrl    String?
+  sourceAttr   String?
+  notes        String?
+  rating       Int?
+  dominantColor String?
+  shareSlug    String?  @unique
+  ingredients  Ingredient[]
+  steps        Step[]
+  tags         RecipeTag[]
+  collections  RecipeCollection[]
+  mealPlans    MealPlanEntry[]
+  favoritedBy  UserFavorite[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  authorId  String?
+  author    User?    @relation(fields: [authorId], references: [id], onDelete: SetNull)
+}
+
+model Ingredient {
+  id       String  @id @default(cuid())
+  amount   String?
+  unit     String?
+  item     String
+  order    Int
+  recipe   Recipe  @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  recipeId String
+}
+
+model Step {
+  id         String  @id @default(cuid())
+  order      Int
+  text       String
+  timerMins  Int?
+  recipe     Recipe  @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  recipeId   String
+}
+
+model Tag {
+  id      String      @id @default(cuid())
+  name    String      @unique
+  recipes RecipeTag[]
+}
+
+model RecipeTag {
+  recipe   Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  recipeId String
+  tag      Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  tagId    String
+  @@id([recipeId, tagId])
+}
+
+model UserFavorite {
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId   String
+  recipe   Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  recipeId String
+  @@id([userId, recipeId])
+}
+
+model Collection {
+  id      String             @id @default(cuid())
+  name    String
+  userId  String?
+  user    User?              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recipes RecipeCollection[]
+}
+
+model RecipeCollection {
+  recipe       Recipe     @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  recipeId     String
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  collectionId String
+  @@id([recipeId, collectionId])
+}
+
+model ImportHistory {
+  id          String   @id @default(cuid())
+  url         String
+  platform    String?
+  status      String   @default("pending")
+  errorMsg    String?
+  recipeId    String?
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+}
+
+model MealPlanEntry {
+  id        String   @id @default(cuid())
+  date      String   // ISO date YYYY-MM-DD
+  mealType  String   @default("dinner") // breakfast | lunch | dinner | snack
+  recipe    Recipe   @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  recipeId  String
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  firstName    String?
+  lastName     String?
+  createdAt    DateTime @default(now())
+  recipes      Recipe[]
+  favorites    UserFavorite[]
+  collections  Collection[]
+  mealPlanEntries MealPlanEntry[]
+  importHistory  ImportHistory[]
+  resetTokens PasswordResetToken[]
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+}
