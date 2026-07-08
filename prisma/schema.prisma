@@ -119,18 +119,20 @@ model MealPlanEntry {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  passwordHash String
-  firstName    String?
-  lastName     String?
-  createdAt    DateTime @default(now())
-  recipes      Recipe[]
-  favorites    UserFavorite[]
-  collections  Collection[]
-  mealPlanEntries MealPlanEntry[]
-  importHistory  ImportHistory[]
-  resetTokens PasswordResetToken[]
+  id                String    @id @default(cuid())
+  email             String    @unique
+  passwordHash      String
+  firstName         String?
+  lastName          String?
+  mustResetPassword Boolean   @default(false)
+  sessionsValidFrom DateTime?
+  createdAt         DateTime  @default(now())
+  recipes           Recipe[]
+  favorites         UserFavorite[]
+  collections       Collection[]
+  mealPlanEntries   MealPlanEntry[]
+  importHistory     ImportHistory[]
+  resetTokens       PasswordResetToken[]
 }
 
 model PasswordResetToken {

@@ -8,8 +8,8 @@ export async function POST(req: NextRequest) {
   if (!user || !verifyPassword(password ?? '', user.passwordHash)) {
     return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
   }
-  const res = NextResponse.json({ ok: true })
-  res.cookies.set(SESSION_COOKIE, createSessionToken(user.id), {
+  const res = NextResponse.json({ ok: true, mustReset: user.mustResetPassword })
+  res.cookies.set(SESSION_COOKIE, createSessionToken(user.id, user.mustResetPassword), {
     httpOnly: true, sameSite: 'lax', maxAge: 30 * 24 * 3600, path: '/',
   })
   return res

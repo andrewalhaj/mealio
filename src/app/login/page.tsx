@@ -45,13 +45,17 @@ export default function LoginPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(mode === 'signup' ? { email, password, firstName, lastName } : { email, password }),
     })
-    const data = await res.json() as { error?: string }
+    const data = await res.json() as { error?: string; mustReset?: boolean }
     if (!res.ok) {
       setError(data.error ?? 'Failed')
       setBusy(false)
       return
     }
-    router.push('/')
+    if (data.mustReset) {
+      router.push('/reset-password')
+    } else {
+      router.push('/')
+    }
     router.refresh()
   }
 
