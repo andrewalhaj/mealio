@@ -28,25 +28,58 @@ function sign(value: string): string {
   return createHmac('sha256', SECRET).update(value).digest('hex')
 }
 
-export function createSessionToken(userId: string): string {
-  const payload = `${userId}.${Date.now()}`
+export function createSessionToken(userId: string, mustReset = false): string {
+  const flag = mustReset ? '1' : '0'
+  const payload = `${userId}.${Date.now()}.${flag}`
   return `${payload}.${sign(payload)}`
+}
+
+export function parseSessionToken(token: string): { userId: string; issuedAt: number; mustReset: boolean } | null {
+  if (!token) return null
+  const parts = token.split('.')
+  if (parts.length === 4) {
+    const [userId, tsStr, flag, hmac] = parts
+    const payload = `${userId}.${tsStr}.${flag}`
+    if (sign(payload) !== hmac) return null
+    const issuedAt = Number(tsStr)
+    if (Date.now() - issuedAt > 30 * 24 * 3600 * 1000) return null
+    return { userId, issuedAt, mustReset: flag === '1' }
+  }
+  if (parts.length === 3) {
+    const [userId, tsStr, hmac] = parts
+    const payload = `${userId}.${tsStr}`
+    if (sign(payload) !== hmac) return null
+    const issuedAt = Number(tsStr)
+    if (Date.now() - issuedAt > 30 * 24 * 3600 * 1000) return null
+    return { userId, issuedAt, mustReset: false }
+  }
+  return null
 }
 
 export function verifySessionToken(token: string | undefined): string | null {
   if (!token) return null
-  const parts = token.split('.')
-  if (parts.length !== 3) return null
-  const payload = `${parts[0]}.${parts[1]}`
-  if (sign(payload) !== parts[2]) return null
-  // 30-day expiry
-  if (Date.now() - Number(parts[1]) > 30 * 24 * 3600 * 1000) return null
-  return parts[0]
+  const parsed = parseSessionToken(token)
+  return parsed?.userId ?? null
 }
 
 export async function getSessionUserId(): Promise<string | null> {
   const token = cookies().get(COOKIE)?.value
-  return verifySessionToken(token)
+  if (!token) return null
+  const parsed = parseSessionToken(token)
+  if (!parsed) return null
+  try {
+    const user = await db.user.findUnique({
+      where: { id: parsed.userId },
+      select: { sessionsValidFrom: true },
+    })
+    if (!user) return null
+    if (user.sessionsValidFrom && parsed.issuedAt < user.sessionsValidFrom.getTime()) {
+      return null
+    }
+  } catch {
+    return null
+  }
+  return parsed.userId
 }
 
 export async function userExists(): Promise<boolean> {
