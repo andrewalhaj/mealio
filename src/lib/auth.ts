@@ -2,14 +2,17 @@ import { createHmac, randomBytes, scryptSync, timingSafeEqual } from 'crypto'
 import { cookies } from 'next/headers'
 import { db } from './db'
 
-const SECRET = (() => {
+let _secret: string | null = null
+function getSecret(): string {
+  if (_secret) return _secret
   const s = process.env.SESSION_SECRET
-  if (s) return s
+  if (s) { _secret = s; return s }
   if (process.env.NODE_ENV === 'production') {
     throw new Error('SESSION_SECRET environment variable is required in production')
   }
-  return 'mealio-dev-secret-change-me'
-})()
+  _secret = 'mealio-dev-secret-change-me'
+  return _secret
+}
 const COOKIE = 'mealio_session'
 
 export function hashPassword(password: string): string {
@@ -25,7 +28,7 @@ export function verifyPassword(password: string, stored: string): boolean {
 }
 
 function sign(value: string): string {
-  return createHmac('sha256', SECRET).update(value).digest('hex')
+  return createHmac('sha256', getSecret()).update(value).digest('hex')
 }
 
 export function createSessionToken(userId: string, mustReset = false): string {
