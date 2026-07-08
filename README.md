@@ -1,41 +1,22 @@
 # Mealio
 
-A multi-user recipe sharing app for you and your friends. Paste a YouTube link, Instagram reel, TikTok, or any recipe website — AI extracts the ingredients and steps automatically. Built with Next.js 14 with a glass-morphism UI, Docker-deployed behind Cloudflare Tunnel.
+A self-hosted, multi-user recipe manager and meal planner. Paste a URL (YouTube, Instagram, TikTok, any recipe site) — AI extracts ingredients and steps automatically. Plan meals on a weekly calendar, build smart shopping lists, and share recipes with friends.
 
+Built with **Next.js 14 (App Router)**, **Prisma + SQLite**, and **Docker**.
 
-## What it does
+---
 
-Mealio solves the "send me that recipe" problem. Instead of screenshotting a reel or typing out ingredients from a video description, you paste a URL and the app does the rest:
+## Features
 
-1. **Paste a link** — YouTube, Instagram, TikTok, or any recipe website
-2. **AI extracts the recipe** — DeepSeek structures it into title, ingredients, steps, prep time, and tags. Vision model (Claude Haiku) handles screenshots.
-3. **Review and save** — Edit anything before saving to the shared library
-4. **Cook from it** — Open cook mode, plan it into your week, share with friends
-
-### Import Sources
-
-| Source | How it works |
-|---|---|
-| **YouTube** | `youtubei.js` Innertube extracts title, description, transcript. DeepSeek structures into recipe. Supplemental web extraction fills in missing steps. |
-| **Instagram / TikTok** | Screenshot-based — Instagram blocked all free API paths in 2026. Upload a screenshot and vision extraction handles it. |
-| **Any website** | Firecrawl fetches the page, DeepSeek structures it. Works with JSON-LD recipe schema and plain-text pages. |
-| **Manual** | Fill-in form for direct entry when you have the recipe on hand. |
-| **Camera / QR** | Scan barcodes to import products, or take a photo of a printed recipe. |
-
-### Features
-
-- **Shared recipe library** — everyone sees everything. Like a family cookbook.
-- **Per-user favorites** — heart what you love, it's yours.
-- **Collections** — group recipes by theme (weeknight dinners, holiday baking, meal prep).
-- **Meal planning** — drag recipes onto a weekly calendar. Aggregates ingredients into a categorized shopping list.
-- **Smart shopping lists** — human-readable formatting: "Chicken Breast" not "1 Chicken Breast". Herbs, spices, dairy, and staples show as name-only since you buy them as a package.
-- **Cook mode** — full-screen step-by-step with timers. Designed for a phone propped up on the counter.
-- **Dark / light theme** — glass-morphism UI with CSS variable tokens. Persists across sessions.
-- **Share links** — public share URLs for sending recipes to friends who don't have an account.
-
-### User Experience
-
-The app is shared with Andrew's friends — it's a small multi-user production app, not a toy. Recipes are communal; favorites, collections, and meal plans are per-user. Auth uses HMAC-signed session cookies with scrypt-hashed passwords. No third-party auth providers — just email + password.
+- **Recipe management** — full CRUD with structured ingredients, steps, timers, tags, hero images, and galleries
+- **URL import** — paste a YouTube/Instagram/TikTok/recipe link; AI (DeepSeek) structures the result. YouTube uses `youtubei.js` Innertube; generic sites use Firecrawl
+- **Camera / screenshot import** — barcode/QR scanner and vision extraction (Claude / GPT-4o)
+- **Instagram import** — Apify Instagram Scraper with residential proxy (see [`docs/apify-instagram-fetcher.md`](docs/apify-instagram-fetcher.md))
+- **Collections** — group recipes into custom categories (per-user)
+- **Meal planning** — drag recipes onto a weekly calendar; auto-generates a categorized shopping list
+- **Cook mode** — full-screen, step-by-step view with timers
+- **Sharing** — public share links via unique slugs (no account required)
+- **Auth** — email + password with scrypt-hashed passwords and HMAC-signed session cookies
 
 ## Tech Stack
 
@@ -43,44 +24,100 @@ The app is shared with Andrew's friends — it's a small multi-user production a
 |---|---|
 | Framework | Next.js 14 (App Router) |
 | Language | TypeScript |
-| Styling | Tailwind CSS + custom glass tokens (CSS variables) |
+| Styling | Tailwind CSS + glass-morphism tokens |
 | Database | Prisma ORM + SQLite |
-| Auth | HMAC session cookies, scrypt password hashing |
-| AI Import | DeepSeek (text extraction), Claude Haiku (vision via OAuth bypass) |
-| Web Fetch | Firecrawl (generic), youtubei.js (YouTube) |
-| Container | Docker (Node 22 Alpine) |
+| Auth | scrypt password hashing, HMAC session cookies |
+| AI Import | DeepSeek, Claude / GPT-4o vision |
+| Scraping | Firecrawl, youtubei.js, Apify |
+| Container | Docker (Node 20 Alpine) |
 
-## Architecture
+## Quick Start (Local Dev)
 
-```
-Browser
-  │
-  │  https://<your-domain>
-  ▼
-Cloudflare Tunnel (cloudflared systemd)
-  │
-  │  localhost:3015
-  ▼
-┌──────────────────────────────────┐
-│  Docker Host                     │
-│                                  │
-│  mealio container (Docker)       │
-│  ├── Next.js 14 app router       │
-│  ├── Prisma/SQLite               │
-│  ├── Tailwind + glass tokens     │
-│  └── Port 3015                   │
-└──────────────────────────────────┘
+```bash
+# 1. Clone and install
+git clone https://github.com/andrewalhaj/mealio.git
+cd mealio
+npm install
+
+# 2. Set environment (see below for required vars)
+cp .env.example .env    # or create .env manually
+
+# 3. Push schema to SQLite
+npx prisma db push
+
+# 4. Start dev server
+npm run dev             # → http://localhost:3015
 ```
 
-## Feature Branches
+### Required Environment Variables
 
-| Branch | Scope |
-|---|---|
-| `main` | Production |
-| `feature/import-pipeline` | YouTube, Instagram, web, screenshot extraction (`src/lib/import/`) |
-| `feature/recipe-management` | Library, detail view, edit, favorites, sharing |
-| `feature/collections` | User collections, grouping, collection picker |
-| `feature/meal-planning` | Weekly calendar, shopping list formatter |
-| `feature/auth` | Login, signup, password reset, HMAC sessions |
-| `feature/camera-scanner` | QR/barcode, live viewfinder, image upload |
-| `feature/glass-ui` | Glass tokens, dark/light theme, Tailwind components |
+**In production `SESSION_SECRET` is mandatory** — the app throws on startup if unset.
+
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `SESSION_SECRET` | **Yes** (prod) | `mealio-dev-secret-change-me` (dev) | HMAC signing key for session cookies |
+| `DATABASE_URL` | No | `file:./prisma/dev.db` | SQLite connection string |
+| `DEEPSEEK_API_KEY` | No | — | DeepSeek API key (recipe text extraction) |
+| `FIRECRAWL_API_KEY` | No | — | Firecrawl API key (generic web scraping) |
+| `VISION_API_KEY` | No | — | OpenAI vision API key (screenshot/photo import) |
+| `VISION_MODEL` | No | `gpt-4o-mini` | Vision model override |
+| `APIFY_API_KEY` | No | — | Apify API key (Instagram scraper) |
+
+## Production (Docker)
+
+```bash
+# Build and run
+docker compose up -d --build
+
+# The container starts on port 3015
+# SQLite data persists in ./data/ (gitignored)
+```
+
+Create a `.env.docker` file alongside `docker-compose.yml`:
+
+```env
+SESSION_SECRET=<generate-a-strong-random-secret>
+DATABASE_URL=file:///app/data/mealio.db
+DEEPSEEK_API_KEY=sk-...
+FIRECRAWL_API_KEY=...
+# … any other vars from the table above
+```
+
+The Docker entrypoint runs `prisma db push` at startup to apply the schema, then starts the Next.js server in standalone mode.
+
+## Data
+
+SQLite database files live in `data/` and are **gitignored** — each deployment gets its own database. See [`data/README.md`](data/README.md).
+
+## Import Pipeline
+
+When you paste a URL, the app detects the platform (YouTube, Instagram, generic), fetches the raw content (via `youtubei.js`, Firecrawl, or Apify), then sends it to DeepSeek for structured recipe extraction (title, ingredients, steps, timers, tags). A second pass searches for a hero image and fills in missing steps. Screenshot uploads bypass the fetch step and go directly to a vision model (Claude or GPT-4o). See [`docs/import-pipeline.md`](docs/import-pipeline.md) for full detail.
+
+## Project Structure
+
+```
+mealio/
+├── prisma/
+│   └── schema.prisma          # Data model (User, Recipe, Ingredient, Step,
+│                              #   Tag, Collection, MealPlanEntry, etc.)
+├── src/
+│   ├── app/
+│   │   ├── api/               # REST routes (auth, recipes, import, etc.)
+│   │   ├── recipes/           # Recipe list, detail, edit, cook mode
+│   │   ├── import/            # Import page, review, history
+│   │   ├── collections/       # Collection browser
+│   │   ├── meal-plan/         # Weekly meal planning calendar
+│   │   ├── share/[slug]/      # Public share view
+│   │   └── login, forgot, reset, settings  # Auth pages
+│   └── lib/
+│       ├── auth.ts            # Session tokens, password hashing
+│       ├── db.ts              # Prisma singleton
+│       └── import/            # URL fetch, extraction, vision
+├── docs/
+│   ├── import-pipeline.md     # Import architecture & pitfalls
+│   └── apify-instagram-fetcher.md  # Instagram scraper setup
+├── docker-compose.yml
+├── Dockerfile
+├── docker-entrypoint.sh
+└── package.json
+```
