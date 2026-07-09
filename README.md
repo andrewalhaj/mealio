@@ -93,6 +93,48 @@ SQLite database files live in `data/` and are **gitignored** — each deployment
 
 When you paste a URL, the app detects the platform (YouTube, Instagram, generic), fetches the raw content (via `youtubei.js`, Firecrawl, or Apify), then sends it to DeepSeek for structured recipe extraction (title, ingredients, steps, timers, tags). A second pass searches for a hero image and fills in missing steps. Screenshot uploads bypass the fetch step and go directly to a vision model (Claude or GPT-4o). See [`docs/import-pipeline.md`](docs/import-pipeline.md) for full detail.
 
+## Architecture
+
+```mermaid
+flowchart TB
+    subgraph Docker["Docker Container (node:20-alpine)"]
+        direction TB
+        subgraph Next["Next.js 14 App Router"]
+            direction TB
+            Pages["Pages\n(recipes, import, collections,\nmeal-plan, share/[slug], auth)"]
+            API["API Routes\n(/api/auth/*, /api/recipes/*,\n/api/import/*, /api/collections/*,\n/api/meal-plan/*, /api/shopping-list/*)"]
+            Lib["Library\n(auth.ts, db.ts,\nimport/{fetcher,extractor,vision})"]
+        end
+        DB["SQLite Database\n(/app/data/mealio.db)"]
+        Prisma["Prisma ORM"]
+    end
+
+    Browser["Browser"] --> Pages
+    Browser --> API
+    Pages --> API
+    API --> Prisma
+    Lib --> Prisma
+    Prisma --> DB
+
+    subgraph External["External Integrations"]
+        Firecrawl["Firecrawl API\n(web scraping)"]
+        YT["youtubei.js\n(YouTube transcript)"]
+        Apify["Apify Instagram Scraper\n(with residential proxy)"]
+        DeepSeek["DeepSeek API\n(recipe extraction)"]
+        Vision["Vision API\n(Claude / GPT-4o)"]
+    end
+
+    API -- "POST /api/import" --> DeepSeek
+    API -- "POST /api/import" --> Firecrawl
+    API -- "POST /api/import" --> YT
+    API -- "POST /api/import" --> Apify
+    API -- "POST /api/import/image" --> Vision
+
+    style Docker fill:#1a1a2e,stroke:#16213e,color:#e0e0e0
+    style Browser fill:#0f3460,stroke:#e94560,color:#e0e0e0
+    style External fill:#1a1a1a,stroke:#333,color:#ccc
+```
+
 ## Project Structure
 
 ```
